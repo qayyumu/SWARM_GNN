@@ -17,7 +17,7 @@ def eval_baseline(eval_data):
 
 def main():
     if ARGS.train:
-        prefix = 'train'
+        prefix = 'train'   # training
     elif ARGS.eval:
         prefix = 'valid'
     else:
