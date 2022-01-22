@@ -5,8 +5,6 @@ import os
 import glob
 import json
 
-
-
 class MLP(keras.layers.Layer):
     def __init__(self, units, dropout=0., batch_norm=False, kernel_l2=0., activation='relu', name=None):
         super().__init__(name=name)
