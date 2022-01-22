@@ -3,6 +3,9 @@ import functools
 import multiprocessing
 import numpy as np
 
+
+
+### simulation data generation
 def run_simulation(simulation, args, instances, processes=1, batch=100, silent=False):
     pool = multiprocessing.Pool(processes=processes)
     timeseries_data_all = []

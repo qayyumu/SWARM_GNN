@@ -14,6 +14,7 @@ N_STEPS: No. of steps for which data is generated  #default:200
 
 
 Data can be generated for variable Boid and Obstacles to specific directory
+
 python swarm_sim_data_generate.py --boids B --obstacles OBST --steps N_STEPS --save-dir /path/to/save/location/
 
 ### Files Generated
