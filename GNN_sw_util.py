@@ -1,6 +1,8 @@
 import numpy as np
 from tensorflow import keras
 import tensorflow as tf
+import os
+import glob
 
 
 class MLP(keras.layers.Layer):
@@ -204,3 +206,5 @@ class OutLayer(keras.layers.Layer):
 
     def call(self, inputs):
         return self.dense(inputs) * self.bound
+
+
