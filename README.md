@@ -39,7 +39,7 @@ elements of the system.
 
 ## Boid
 
-A simple implementation of Craig Reynolds' [Boids](https://www.red3d.com/cwr/boids/) model.  
+Implementation of Craig Reynolds' [Boids](https://www.red3d.com/cwr/boids/) model.  
 
 ![2D Flocking w/ Goal and Obstacle](boid_obstacle2.gif)
 
