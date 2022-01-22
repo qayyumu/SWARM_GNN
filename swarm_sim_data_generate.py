@@ -3,7 +3,7 @@ import argparse
 import json
 
 import numpy as np
-import util_swarm_func
+from util_swarm_func import *
 
 
 def random_obstacle(position1, position2, r):
@@ -33,8 +33,8 @@ def system_edges(obstacles, boids, vicseks):
 |Obst 2| 0  | 0  | 0    | 0    | 2    | 2    |
 |Boid 1| 0  | 0  | 0    | 0    | 0    | 3    |  
 |Boid 2| 0  | 0  | 0    | 0    | 3    | 0    |  
-
     """
+
     # If boids == 0, edges would be same as if vicseks were boids
     if boids == 0:
         boids, vicseks = vicseks, boids
@@ -79,17 +79,7 @@ def simulation(args, _):
         agent.set_goal(goal)
 
         env.add_agent(agent)
-    for _ in range(args.vicseks):
-        position = np.random.uniform(-80, 80, 2)
-        velocity = np.random.uniform(-15, 15, 2)
-
-        agent = Vicsek(position, velocity, ndim=2, vision=args.vision, size=args.size,
-                       max_speed=10, max_acceleration=5)
-        agent.set_goal(goal)
-
-        env.add_agent(agent)
-
-    # Create a sphere obstacle near segment between avg boids position and goal position.
+   # Create a sphere obstacle near segment between avg boids position and goal position.
     avg_boids_position = np.mean(
         np.vstack([agent.position for agent in env.population]), axis=0)
 
@@ -132,11 +122,10 @@ def main():
 
     if ARGS.boids > 0:
         Boid.set_model(model_config["boid"])
-    if ARGS.vicseks > 0:
-        Vicsek.set_model(model_config["vicsek"])
+    
 
     timeseries_data_all, edge_data_all, time_data_all = \
-        utils.run_simulation(simulation, ARGS, ARGS.instances, ARGS.processes, ARGS.batch_size)
+        run_simulation(simulation, ARGS, ARGS.instances, ARGS.processes, ARGS.batch_size)
 
     np.save(os.path.join(ARGS.save_dir,
                          f'{ARGS.prefix}_timeseries{ARGS.suffix}.npy'), timeseries_data_all)
@@ -163,7 +152,7 @@ if __name__ == '__main__':
                         help='number of simulation instances')
     parser.add_argument('--dt', type=float, default=0.1,
                         help='time resolution')
-    parser.add_argument('--config', type=str, default='config/boid_vicsek_default.json',
+    parser.add_argument('--config', type=str, default='boid_default.json',
                         help='path to config file')
     parser.add_argument('--save-dir', type=str, default='.',
                         help='name of the save directory')
