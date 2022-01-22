@@ -283,37 +283,6 @@ class Agent(Entity):
         raise NotImplementedError()
 
 
-<<<<<<< HEAD
-=======
-class Chaser(Entity):
-    """A Particle agent that chases another Particle"""
-
-    def __init__(self, position, velocity=None, acceleration=None,
-                 ndim=None, max_speed=None, max_acceleration=None):
-        super().__init__(position, velocity, acceleration, ndim, max_speed, max_acceleration)
-
-        self._targets = []
-
-    @property
-    def targets(self):
-        return self._targets
-
-    def add_target(self, new_target):
-        if new_target:
-            if not isinstance(new_target, Entity):
-                raise ValueError('new_target must be a Entity')
-
-            self._targets.append(new_target)
-
-    def decide(self):
-        displacement = np.zeros(self.ndim)
-        for target in self.targets:
-            displacement += target.position - self.position
-
-        self.acceleration = displacement
-
->>>>>>> e5dda01d487354fbe1367210caa77d1d6e1f71a7
-
 class Boid(Agent):
     """Boid agent"""
     config = {
@@ -437,73 +406,6 @@ class Boid(Agent):
         cls.config.update(config)
 
 
-<<<<<<< HEAD
-=======
-class Vicsek(Agent):
-    config = {
-        'tau': 1.0,
-        'A': 1.0,
-        'B': 2.0,
-        'k': 2.0,
-        'kappa': 1.0
-    }
-
-    def _interaction(self, other):
-        r = self.size + other.size
-        d = np.linalg.norm(self.position - other.position)
-
-        if isinstance(other, Obstacle):
-            n = other.direction(self.position)
-        else:
-            n = (self.position - other.position) / d
-
-        repulsion = self.config['A'] * np.exp((r - d) / self.config['B']) * n
-        friction = 0
-        if r > d:
-            repulsion += self.config['k'] * (r - d) * n  # Body force.
-
-            delta_v = other.velocity - self.velocity
-            friction += self.config['kappa'] * \
-                (r - d) * (delta_v - np.dot(delta_v, n) * n)
-
-        return repulsion + friction
-
-    def _goal_seeking(self):
-        """Individual goal of the boid."""
-        # As a simple example, suppose the boid would like to go as fast as it
-        # can in the current direction when no explicit goal is present.
-        if not self.goal:
-            return self.velocity / self.speed
-
-        # The urge to chase the goal is stronger when farther.
-        offset = self.goal.position - self.position
-        distance = np.linalg.norm(offset)
-        target_speed = self.max_speed * min(1, distance / 20)
-        target_velocity = target_speed * offset / distance
-        return target_velocity - self.velocity
-
-    def decide(self):
-        """Make decision for acceleration."""
-        goal_steering = np.zeros(self.ndim)
-
-        goal_steering += self._goal_seeking()
-
-        interactions = 0
-        for neighbor in self.neighbors:
-            interactions += self._interaction(neighbor)
-
-        for obstacle in self.obstacles:
-            interactions += self._interaction(obstacle)
-
-        self.acceleration = interactions + goal_steering
-
-    @classmethod
-    def set_model(cls, config):
-        config = {k: v for k, v in config.items() if k in cls.config}
-        cls.config.update(config)
-
-
->>>>>>> e5dda01d487354fbe1367210caa77d1d6e1f71a7
 class Environment2D:
     """Environment that contains the population of boids, goals and obstacles."""
 
