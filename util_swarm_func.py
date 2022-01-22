@@ -343,6 +343,7 @@ class Boid(Agent):
 
     def _obstacle_avoidance(self):
         """Boids try to avoid obstacles."""
+        
         # NOTE: Assume there is always enough space between obstacles
         # Find the nearest obstacle in the front.
         min_distance = np.inf
