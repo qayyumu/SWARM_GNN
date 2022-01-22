@@ -41,7 +41,5 @@ elements of the system.
 
 A simple implementation of Craig Reynolds' [Boids](https://www.red3d.com/cwr/boids/) model.  
 
-![2D Flocking w/ Goal and Obstacle](demo/boid_goal_obstacle.gif)
-![2D Flocking w/ Goal and Obstacle2](demo/boid_goal_obstacle2.gif)
-![2D Flocking w/ Goal and Obstacle2](demo/boid_goal_obstacle3.gif)
+![2D Flocking w/ Goal and Obstacle](boid_obstacle2.gif)
 
