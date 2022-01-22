@@ -1,0 +1,16 @@
+{
+    "boid": {
+        "cohesion": 0.2,
+        "separation": 2,
+        "alignment": 0.2,
+        "obstacle_avoidance": 2,
+        "goal_steering": 0.5
+    },
+    "vicsek": {
+        "tau": 1.0,
+        "A": 1.0,
+        "B": 2.0,
+        "k": 2.0,
+        "kappa": 1.0
+    }
+}
