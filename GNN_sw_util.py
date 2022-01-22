@@ -297,7 +297,7 @@ def preprocess_data(data, seg_len=1, pred_steps=1, edge_type=1, ground_truth=Tru
     else:
         expected_time_segs = None
 
-    edges_one_hot = utils.one_hot(edges, edge_label, np.float32)
+    edges_one_hot = one_hot(edges, edge_label, np.float32)
     edges_one_hot = np.repeat(edges_one_hot, time_segs_stack.shape[1], axis=0)
 
     if len(data) > 2:
