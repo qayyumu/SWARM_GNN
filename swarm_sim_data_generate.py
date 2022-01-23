@@ -7,6 +7,14 @@ from util_swarm_func import *
 
 
 def random_obstacle(position1, position2, r):
+    '''
+    Generate a random obstacle of radius r randomly placed between position1 and position2.
+    
+    :param position1: The position of the first obstacle
+    :param position2: the position of the obstacle
+    :param r: radius of the obstacle
+    :return: A list of obstacles.
+    '''
     """Return an obstacle of radius r randomly placed between position1 and position2"""
     d = position1 - position2
     d_len = np.sqrt(d.dot(d))
