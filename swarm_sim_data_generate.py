@@ -4,7 +4,7 @@ import json
 
 import numpy as np
 from util_swarm_func import *
-
+obstacle_fixed  = 1            ## if we want the obstacles to be at fixed location 
 
 def random_obstacle(position1, position2, r):
     '''
@@ -21,13 +21,20 @@ def random_obstacle(position1, position2, r):
     cos = d[0] / d_len
     sin = d[1] / d_len
 
+    if(obstacle_fixed):
     # Generat random x and y assuming d is aligned with x axis.
-    x = np.random.uniform(2 + r, d_len - r)
-    y = np.random.uniform(-2 * r, 2 * r)
+        x = 13 #np.random.uniform(.1 + r, d_len - r)
+        y = 8 #np.random.uniform(.1 * r, 1 * r)
+    else:
+        x = np.random.uniform(2 + r, d_len - r)
+        y = np.random.uniform(-2 * r, 2 * r)
+
 
     # Rotate the alignment back to the actural d.
     true_x = x * cos + y * sin + position2[0]
     true_y = x * sin - y * cos + position2[1]
+    
+
 
     return Sphere(r, [true_x, true_y], ndim=2)
 
@@ -93,7 +100,11 @@ def simulation(args, _):
 
     spheres = []
     for _ in range(args.obstacles):
-        sphere = random_obstacle(avg_boids_position, goal.position, 8)
+        
+        if(obstacle_fixed):         
+            sphere = random_obstacle(np.array([-54,64]), np.array([33,17]), 8)
+        else:
+            sphere = random_obstacle(avg_boids_position, goal.position, 8)
         spheres.append(sphere)
         env.add_obstacle(sphere)
 
@@ -132,13 +143,47 @@ def main():
         Boid.set_model(model_config["boid"])
     
 
-    timeseries_data_all, edge_data_all, time_data_all = \
-        run_simulation(simulation, ARGS, ARGS.instances, ARGS.processes, ARGS.batch_size)
+    for i in range(10):
+        
+        timeseries_data_all, edge_data_all, time_data_all = \
+            run_simulation(simulation, ARGS, ARGS.instances, ARGS.processes, ARGS.batch_size)
 
-    np.save(os.path.join(ARGS.save_dir,
-                         f'{ARGS.prefix}_timeseries{ARGS.suffix}.npy'), timeseries_data_all)
-    np.save(os.path.join(ARGS.save_dir, f'{ARGS.prefix}_edge{ARGS.suffix}.npy'), edge_data_all)
-    np.save(os.path.join(ARGS.save_dir, f'{ARGS.prefix}_time{ARGS.suffix}.npy'), time_data_all)
+        
+        
+        ### plot the trajectory here
+        plot_timeseries_data = np.array(timeseries_data_all)
+        import matplotlib.pyplot as plt
+        
+        ## get the target goal position
+        target_pos = plot_timeseries_data[0,:,0,0:2]   ## get zero index -target position
+        obj_pos = plot_timeseries_data[0,:,1:3,0:2]   ## get zero index -obstacle position
+        boid_pos = plot_timeseries_data[0,:,3:5,0:2]   ## get zero index -boids position
+        
+        
+        ###plot goal
+        plt.plot(target_pos[:,0],target_pos[:,1],'r*',marker="*",markersize=25)
+        ###plot obstacle
+        plt.plot(obj_pos[:,0],obj_pos[:,1],'bo',marker="o",markersize=25)
+        ###plot boid -1
+        plt.plot(boid_pos[0,0,0],boid_pos[0,0,1],'g*',marker="*",markersize=15)   ## starting point of boid-1
+        plt.plot(boid_pos[:,0,0],boid_pos[:,0,1],'g.')
+        ###plot boid 2
+        plt.plot(boid_pos[0,1,0],boid_pos[0,1,1],'y*',marker="*",markersize=15)   ##starting point of boid 
+        plt.plot(boid_pos[:,1,0],boid_pos[:,1,1],'y.')
+        
+        plt.xlim([-80, 80])
+        plt.ylim([-80, 80])
+        plt.show()
+        
+        newsuffix = ARGS.suffix+str(i)
+        np.save(os.path.join(ARGS.save_dir,
+                            f'{ARGS.prefix}_timeseries{newsuffix}.npy'), timeseries_data_all)
+        np.save(os.path.join(ARGS.save_dir, f'{ARGS.prefix}_edge{newsuffix}.npy'), edge_data_all)
+        np.save(os.path.join(ARGS.save_dir, f'{ARGS.prefix}_time{newsuffix}.npy'), time_data_all)
+        
+    
+    
+    
 
 
 if __name__ == '__main__':
@@ -154,7 +199,7 @@ if __name__ == '__main__':
                         help='vision range to determine range of interaction')
     parser.add_argument('--size', type=float, default=3,
                         help='agent size')
-    parser.add_argument('--steps', type=int, default=200,
+    parser.add_argument('--steps', type=int, default=2000,
                         help='number of simulation steps')
     parser.add_argument('--instances', type=int, default=1,
                         help='number of simulation instances')
