@@ -9,7 +9,7 @@ from GNN_swarm import *
 from GNN_sw_util import *
 
 
-def eval_baseline(eval_data):
+def eval_baseline(eval_data): #  evalute baseline
     time_segs = eval_data[0]
     return np.mean(np.square(time_segs[:, :-1, :, :] -
                              time_segs[:, 1:, :, :]))
