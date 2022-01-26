@@ -2,3 +2,4 @@ __pycache__/util_swarm_func.cpython-39.pyc
 *.npy
 *.png
 *.pyc
+*.gif
