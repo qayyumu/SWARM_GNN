@@ -1,7 +1,8 @@
 # Swarms Simulation (Data generated from this repo will be used for GNN training)
 
 Data generation for swarm simulation
-Original implementation is taken from Siyu Zhou (https://github.com/siyuzhou)
+
+[Modification is implementated in the original implementation of Siyu Zhou (https://github.com/siyuzhou)]
 
 Two Boids with two obstacle and one goal data generation
 ```bash
