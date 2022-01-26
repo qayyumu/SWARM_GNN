@@ -6,7 +6,7 @@ import numpy as np
 from util_swarm_func import *
 import matplotlib.pyplot as plt
 
-num_of_simulations = 1
+num_of_simulations = 10
 obstacle_fixed  = 1            ## if we want the obstacles to be at fixed location 
 animation_steps = 2000
 
