@@ -178,7 +178,7 @@ def main():
         ###plot goal
         plt.plot(target_pos[:,0],target_pos[:,1],'r*',marker="*",markersize=25)
         ###plot obstacle
-        plt.plot(obj_pos[:,0],obj_pos[:,1],'bo',marker="o",markersize=25)
+        plt.plot(obj_pos[:,0],obj_pos[:,1],'bo',marker="o",markersize=15)
         ###plot boid -1
         plt.plot(boid_pos[0,0,0],boid_pos[0,0,1],'g*',marker="*",markersize=15)   ## starting point of boid-1
         plt.plot(boid_pos[:,0,0],boid_pos[:,0,1],'g.')
