@@ -158,6 +158,7 @@ def main():
         Boid.set_model(model_config["boid"])
     
 
+<<<<<<< HEAD
     for i in range(num_of_simulations):
         
         timeseries_data_all, edge_data_all, time_data_all = \
@@ -235,6 +236,37 @@ def main():
     # # plt.show()
     # anim.save("TLI.gif", dpi=300, writer=PillowWriter(fps=25))    
         
+=======
+    timeseries_data_all, edge_data_all, time_data_all = \
+        run_simulation(simulation, ARGS, ARGS.instances, ARGS.processes, ARGS.batch_size)
+
+    np.save(os.path.join(ARGS.save_dir,
+                         f'{ARGS.prefix}_timeseries{ARGS.suffix}.npy'), timeseries_data_all)
+    np.save(os.path.join(ARGS.save_dir, f'{ARGS.prefix}_edge{ARGS.suffix}.npy'), edge_data_all)
+    np.save(os.path.join(ARGS.save_dir, f'{ARGS.prefix}_time{ARGS.suffix}.npy'), time_data_all)
+    
+    ### plot the trajectory here
+    plot_timeseries_data = np.array(timeseries_data_all)
+    import matplotlib.pyplot as plt
+    
+    ## get the target goal position
+    target_pos = plot_timeseries_data[0,:,0,0:2]   ## get zero index -target position
+    obj_pos = plot_timeseries_data[0,:,1:3,0:2]   ## get zero index -obstacle position
+    boid_pos = plot_timeseries_data[0,:,3:5,0:2]   ## get zero index -boids position
+    
+    ###plot goal
+    plt.plot(target_pos[:,0],target_pos[:,1],'r*')
+    ###plot obstacle
+    plt.plot(obj_pos[:,0],obj_pos[:,1],'bo')
+    ###plot boid -1
+    plt.plot(boid_pos[0,0,0],boid_pos[0,0,1],'g*',marker="*",markersize=15)   ## starting point of boid-1
+    plt.plot(boid_pos[:,0,0],boid_pos[:,0,1],'g.')
+     ###plot boid 2
+    plt.plot(boid_pos[0,1,0],boid_pos[0,1,1],'y*',marker="*",markersize=15)   ##starting point of boid 
+    plt.plot(boid_pos[:,1,0],boid_pos[:,1,1],'y.')
+    plt.show()
+    
+>>>>>>> deba4abb15e4be8929d67f70944ebc8883b279b8
     
     
     
@@ -253,7 +285,11 @@ if __name__ == '__main__':
                         help='vision range to determine range of interaction')
     parser.add_argument('--size', type=float, default=3,
                         help='agent size')
+<<<<<<< HEAD
     parser.add_argument('--steps', type=int, default=animation_steps,
+=======
+    parser.add_argument('--steps', type=int, default=2000,
+>>>>>>> deba4abb15e4be8929d67f70944ebc8883b279b8
                         help='number of simulation steps')
     parser.add_argument('--instances', type=int, default=1,
                         help='number of simulation instances')
