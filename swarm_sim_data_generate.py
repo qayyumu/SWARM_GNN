@@ -206,7 +206,7 @@ def main():
         
      # Build GIF
     import imageio
-    with imageio.get_writer('mygif.gif', mode='I') as writer:
+    with imageio.get_writer('TLI.gif', mode='I') as writer:
         for filename in range(num_of_simulations):
             image = imageio.imread(str(filename)+'.png')
             writer.append_data(image)

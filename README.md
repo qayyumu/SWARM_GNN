@@ -43,5 +43,5 @@ Goal = 1, Obstacle = 2, Boid = 2
 
 ## Boid
 
-![2D Flocking w/ Goal and Obstacle](boid_obstacle2.gif)
+![2 Boid Flocking w/ Goal and Two Obstacles -- multiple Simulations](TLI.gif)
 
