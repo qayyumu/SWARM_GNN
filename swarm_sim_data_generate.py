@@ -4,7 +4,11 @@ import json
 
 import numpy as np
 from util_swarm_func import *
+import matplotlib.pyplot as plt
+
+num_of_simulations = 1
 obstacle_fixed  = 1            ## if we want the obstacles to be at fixed location 
+animation_steps = 2000
 
 def random_obstacle(position1, position2, r):
     '''
@@ -130,6 +134,17 @@ def simulation(args, _):
 
     return timeseries_data, edge_data, time_data
 
+def maximize(plt):
+    plot_backend = plt.get_backend()
+    mng = plt.get_current_fig_manager()
+    if plot_backend == 'TkAgg':
+        mng.resize(*mng.window.maxsize())
+    elif plot_backend == 'wxAgg':
+        mng.frame.Maximize(True)
+    elif plot_backend == 'Qt5Agg':
+        mng.window.showMaximized()
+
+
 
 def main():
     if not os.path.exists(ARGS.save_dir):
@@ -143,7 +158,7 @@ def main():
         Boid.set_model(model_config["boid"])
     
 
-    for i in range(10):
+    for i in range(num_of_simulations):
         
         timeseries_data_all, edge_data_all, time_data_all = \
             run_simulation(simulation, ARGS, ARGS.instances, ARGS.processes, ARGS.batch_size)
@@ -152,7 +167,7 @@ def main():
         
         ### plot the trajectory here
         plot_timeseries_data = np.array(timeseries_data_all)
-        import matplotlib.pyplot as plt
+        
         
         ## get the target goal position
         target_pos = plot_timeseries_data[0,:,0,0:2]   ## get zero index -target position
@@ -173,13 +188,52 @@ def main():
         
         plt.xlim([-80, 80])
         plt.ylim([-80, 80])
-        plt.show()
+        maximize(plt)
+        # plt.show()
+        plt.title(['Simulation # '+ str(i)])
+        plt.show(block=False)
+        plt.savefig(str(i)+'.png')
+        
+        plt.pause(1)
+        plt.close()
+        
         
         newsuffix = ARGS.suffix+str(i)
         np.save(os.path.join(ARGS.save_dir,
                             f'{ARGS.prefix}_timeseries{newsuffix}.npy'), timeseries_data_all)
         np.save(os.path.join(ARGS.save_dir, f'{ARGS.prefix}_edge{newsuffix}.npy'), edge_data_all)
         np.save(os.path.join(ARGS.save_dir, f'{ARGS.prefix}_time{newsuffix}.npy'), time_data_all)
+        
+     # Build GIF
+    import imageio
+    with imageio.get_writer('mygif.gif', mode='I') as writer:
+        for filename in range(num_of_simulations):
+            image = imageio.imread(str(filename)+'.png')
+            writer.append_data(image)
+            
+    
+    # from matplotlib.animation import FuncAnimation, PillowWriter
+    # fig = plt.figure()
+    # fig.show()
+    # # axis = plt.axes(xlim =(-80, 80), ylim =(-80, 80))
+    # line, = plt.plot([], [], lw = 3)
+    # line.set_data([], [])
+    
+    
+    # def animate(i):
+    #     x = boid_pos[i,1,0]
+    #     # plots a sine graph
+    #     y = boid_pos[i,1,1]
+    #     line.set_data(x, y)
+    #     return line,
+    
+    
+    # anim = FuncAnimation(fig, animate,
+    #                 frames = 2000,
+    #                 interval = 100,
+    #                 blit = True)
+    # # plt.show()
+    # anim.save("TLI.gif", dpi=300, writer=PillowWriter(fps=25))    
         
     
     
@@ -199,7 +253,7 @@ if __name__ == '__main__':
                         help='vision range to determine range of interaction')
     parser.add_argument('--size', type=float, default=3,
                         help='agent size')
-    parser.add_argument('--steps', type=int, default=2000,
+    parser.add_argument('--steps', type=int, default=animation_steps,
                         help='number of simulation steps')
     parser.add_argument('--instances', type=int, default=1,
                         help='number of simulation instances')
