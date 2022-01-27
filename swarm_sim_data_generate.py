@@ -5,11 +5,25 @@ import json
 import numpy as np
 from util_swarm_func import *
 import matplotlib.pyplot as plt
+import math
 
 num_of_simulations = 10
 obstacle_fixed  = 1            ## if we want the obstacles to be at fixed location 
-animation_steps = 2000
+animation_steps = 1000
+def check(position):
+    """
+    checks if the generated position lies with in the obstacle's radius
+    
+    """
+    
+    dist1= np.linalg.norm(position-[-54,34])
+    dist2= np.linalg.norm(position-[33,17])
+    if (dist1<10 or dist2<10):
+        position = np.random.uniform(-80, 80, 2)
+        check(position)
 
+    return position
+        
 def random_obstacle(position1, position2, r):
     '''
     Generate a random obstacle of radius r randomly placed between position1 and position2.
@@ -85,12 +99,14 @@ def simulation(args, _):
     region = (-100, 100, -100, 100)
 
     env = Environment2D(region)
-
-    goal = Goal(np.random.uniform(-40, 40, 2), ndim=2)
+    position = np.random.uniform(-40, 40, 2)
+    position=check(position)
+    goal = Goal(position, ndim=2)
     env.add_goal(goal)
 
     for _ in range(args.boids):
         position = np.random.uniform(-80, 80, 2)
+        position=check(position)
         velocity = np.random.uniform(-15, 15, 2)
 
         agent = Boid(position, velocity, ndim=2, vision=args.vision, size=args.size,
@@ -103,6 +119,8 @@ def simulation(args, _):
         np.vstack([agent.position for agent in env.population]), axis=0)
 
     spheres = []
+    """
+    For more than 1 fixed/random obstacle
     for _ in range(args.obstacles):
         
         if(obstacle_fixed):         
@@ -111,7 +129,13 @@ def simulation(args, _):
             sphere = random_obstacle(avg_boids_position, goal.position, 8)
         spheres.append(sphere)
         env.add_obstacle(sphere)
-
+    """
+    sphere = Sphere(8, [-54,34], ndim=2)
+    env.add_obstacle(sphere)
+    spheres.append(sphere)
+    sphere = Sphere(8, [33,17], ndim=2)
+    env.add_obstacle(sphere)
+    spheres.append(sphere)
     position_data = []
     velocity_data = []
     time_data = []
@@ -172,20 +196,34 @@ def main():
         ## get the target goal position
         target_pos = plot_timeseries_data[0,:,0,0:2]   ## get zero index -target position
         obj_pos = plot_timeseries_data[0,:,1:3,0:2]   ## get zero index -obstacle position
-        boid_pos = plot_timeseries_data[0,:,3:5,0:2]   ## get zero index -boids position
+        boid_pos = plot_timeseries_data[0,:,3:7,0:2]   ## get zero index -boids position
         
-        
+        fig, ax = plt.subplots()
         ###plot goal
         plt.plot(target_pos[:,0],target_pos[:,1],'r*',marker="*",markersize=25)
+        
         ###plot obstacle
-        plt.plot(obj_pos[:,0],obj_pos[:,1],'bo',marker="o",markersize=15)
+        #plt.plot(obj_pos[:,0],obj_pos[:,1],'bo',marker="o",markersize=15)
+
+        # In case of stationary obstacles
+        circle = plt.Circle(obj_pos[0,0],8, color='b', fill=True)
+        ax.add_patch(circle)
+        circle = plt.Circle(obj_pos[0,1],8, color='b', fill=True)
+        ax.add_patch(circle)
+
         ###plot boid -1
         plt.plot(boid_pos[0,0,0],boid_pos[0,0,1],'g*',marker="*",markersize=15)   ## starting point of boid-1
         plt.plot(boid_pos[:,0,0],boid_pos[:,0,1],'g.')
         ###plot boid 2
         plt.plot(boid_pos[0,1,0],boid_pos[0,1,1],'y*',marker="*",markersize=15)   ##starting point of boid 
         plt.plot(boid_pos[:,1,0],boid_pos[:,1,1],'y.')
-        
+         ###plot boid 3
+        plt.plot(boid_pos[0,2,0],boid_pos[0,2,1],'c*',marker="*",markersize=15)   ##starting point of boid 
+        plt.plot(boid_pos[:,2,0],boid_pos[:,2,1],'c.')
+        ###plot boid 4
+        plt.plot(boid_pos[0,3,0],boid_pos[0,3,1],'m*',marker="*",markersize=15)   ##starting point of boid 
+        plt.plot(boid_pos[:,3,0],boid_pos[:,3,1],'m.')
+
         plt.xlim([-80, 80])
         plt.ylim([-80, 80])
         maximize(plt)
@@ -201,9 +239,11 @@ def main():
         newsuffix = ARGS.suffix+str(i)
         np.save(os.path.join(ARGS.save_dir,
                             f'{ARGS.prefix}_timeseries{newsuffix}.npy'), timeseries_data_all)
-        np.save(os.path.join(ARGS.save_dir, f'{ARGS.prefix}_edge{newsuffix}.npy'), edge_data_all)
+        #np.save(os.path.join(ARGS.save_dir, f'{ARGS.prefix}_edge{newsuffix}.npy'), edge_data_all)
         np.save(os.path.join(ARGS.save_dir, f'{ARGS.prefix}_time{newsuffix}.npy'), time_data_all)
-        
+    
+    #as edges remain same for all simulations
+    np.save(os.path.join(ARGS.save_dir, f'{ARGS.prefix}_edge.npy'), edge_data_all)
      # Build GIF
     import imageio
     with imageio.get_writer('TLI.gif', mode='I') as writer:
@@ -243,7 +283,7 @@ def main():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--boids', type=int, default=2,
+    parser.add_argument('--boids', type=int, default=4,
                         help='number of boid agents')
     parser.add_argument('--vicseks', type=int, default=0,
                         help='number of vicsek agents')
@@ -261,7 +301,7 @@ if __name__ == '__main__':
                         help='time resolution')
     parser.add_argument('--config', type=str, default='boid_default.json',
                         help='path to config file')
-    parser.add_argument('--save-dir', type=str, default='.',
+    parser.add_argument('--save-dir', type=str, default='simulations/',
                         help='name of the save directory')
     parser.add_argument('--prefix', type=str, default='',
                         help='prefix for save files')
