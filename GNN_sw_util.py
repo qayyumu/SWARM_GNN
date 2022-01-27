@@ -217,13 +217,14 @@ def stack_time_series(time_series, seg_len, axis=2):
 
 def _load_files(file_pattern, dtype, padding=None, pad_dims=None):
     files = sorted(glob.glob(file_pattern))
+    print(files)
     if not files:
         raise FileNotFoundError(f"no files matching pattern {file_pattern} found")
 
     all_data = []
     for f in files:
         data = np.load(f).astype(dtype)
-
+        #print(f)
         if padding is not None and pad_dims is not None:
             pad_shape = [(0, padding - s if i in pad_dims else 0) for i, s in enumerate(data.shape)]
             data = np.pad(data, pad_shape, mode='constant', constant_values=0)
@@ -233,39 +234,73 @@ def _load_files(file_pattern, dtype, padding=None, pad_dims=None):
     return np.concatenate(all_data, axis=0)
 
 
-def load_data(data_path, prefix='train', size=None, padding=None, load_time=False):
+def load_data(data_path,no_of_sim, prefix='train',suffix='',more_sim=False, size=None, padding=None, load_time=False):
     if not os.path.exists(data_path):
         raise ValueError(f"path '{data_path}' does not exist")
-
-    # Load timeseries data.
-    timeseries_file_pattern = os.path.join(data_path, f'{prefix}_timeseries*.npy')
-    all_data = _load_files(timeseries_file_pattern, np.float32, padding=padding, pad_dims=(2,))
-
     # Load edge data.
     edge_file_pattern = os.path.join(data_path, f'{prefix}_edge*.npy')
     all_edges = _load_files(edge_file_pattern, np.int, padding, pad_dims=(1, 2))
 
-    shuffled_idx = np.random.permutation(len(all_data))
-    # Truncate data samples if `size` is given.
-    if size:
-        samples = shuffled_idx[:size]
+    if (not more_sim):
+        # Load timeseries data.
+        timeseries_file_pattern = os.path.join(data_path, f'{prefix}_timeseries.npy')
+        all_data = _load_files(timeseries_file_pattern, np.float32, padding=padding, pad_dims=(2,))
 
-        all_data = all_data[samples]
-        all_edges = all_edges[samples]
-
-    # Load time labels only when required.
-    if load_time:
-        time_file_pattern = os.path.join(data_path, f'{prefix}_time*.npy')
-        all_times = _load_files(time_file_pattern, np.float32)
-
+        shuffled_idx = np.random.permutation(len(all_data))
+        # Truncate data samples if `size` is given.
         if size:
             samples = shuffled_idx[:size]
 
-            all_times = all_times[samples]
+            all_data = all_data[samples]
+            all_edges = all_edges[samples]
 
-        return all_data, all_edges, all_times
+        # Load time labels only when required.
+        if load_time:
+            time_file_pattern = os.path.join(data_path, f'{prefix}_time*.npy')
+            all_times = _load_files(time_file_pattern, np.float32)
 
-    return all_data, all_edges
+            if size:
+                samples = shuffled_idx[:size]
+
+                all_times = all_times[samples]
+
+            return all_data, all_edges, all_times
+
+        return all_data, all_edges
+    
+    else:
+        all_data=[]
+        all_times=[]
+        for i in range(no_of_sim):
+            newsuffix = suffix+str(i)
+            # Load timeseries data.
+            timeseries_file_pattern = os.path.join(data_path, f'{prefix}_timeseries{newsuffix}.npy')
+            data = _load_files(timeseries_file_pattern, np.float32, padding=padding, pad_dims=(2,))
+            all_data.append(data)
+
+            shuffled_idx = np.random.permutation(len(all_data))
+            # Truncate data samples if `size` is given.
+            if size:
+                samples = shuffled_idx[:size]
+
+                all_data = all_data[samples]
+                all_edges = all_edges[samples]
+
+            # Load time labels only when required.
+            if load_time:
+                time_file_pattern = os.path.join(data_path, f'{prefix}_time{newsuffix}*.npy')
+                times = _load_files(time_file_pattern, np.float32)
+                all_times.append(times)
+
+                if size:
+                    samples = shuffled_idx[:size]
+
+                    all_times = all_times[samples]
+
+                return all_data, all_edges, all_times
+
+        return all_data, all_edges
+
 
 
 def preprocess_data(data, seg_len=1, pred_steps=1, edge_type=1, ground_truth=True):

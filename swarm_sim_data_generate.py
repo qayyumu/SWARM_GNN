@@ -301,9 +301,9 @@ if __name__ == '__main__':
                         help='time resolution')
     parser.add_argument('--config', type=str, default='boid_default.json',
                         help='path to config file')
-    parser.add_argument('--save-dir', type=str, default='simulations/',
+    parser.add_argument('--save-dir', type=str, default='data/',
                         help='name of the save directory')
-    parser.add_argument('--prefix', type=str, default='',
+    parser.add_argument('--prefix', type=str, default='train',
                         help='prefix for save files')
     parser.add_argument('--suffix', type=str, default='savedata_',
                         help='suffix for save files')
