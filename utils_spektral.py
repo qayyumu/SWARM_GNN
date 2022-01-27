@@ -137,7 +137,6 @@ def preprocess_data(data, seg_len=1, pred_steps=1, edge_type=1, ground_truth=Tru
     time_segs = time_segs_stack.reshape([-1, seg_len, num_nodes, ndims])#195,5,5,4, changes the timesegs to
     # [0]= first 5 timesteps,[1]= 2:6 timesteps etc
     
-
     if ground_truth:
         # Stack shape [num_sims, time_steps-seg_len-pred_steps+1, pred_steps, num_nodes, ndims]
         expected_time_segs_stack = stack_time_series(time_series[:, seg_len:, :, :],
@@ -165,7 +164,6 @@ def preprocess_data(data, seg_len=1, pred_steps=1, edge_type=1, ground_truth=Tru
             expected_time_stamps_segs = expected_time_stamps_stack.reshape([-1, pred_steps])
         else:
             expected_time_stamps_segs = None
-        print('BEFORE RETURNING FROM PREPROCESS DATA')
 
         return [time_segs, edges_one_hot], expected_time_segs, [time_stamps_segs, expected_time_stamps_segs]
 

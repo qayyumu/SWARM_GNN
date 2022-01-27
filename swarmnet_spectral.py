@@ -12,12 +12,12 @@ class SwarmNet(Model):
         super().__init__()
         #input(195,5,7,4),output(195,1,7,4)
         self.pred_steps=pred_steps
-        self.time_seg_len= model_params['time_seg_len']
+        self.time_seg_len= 1
         # Layers
-        self.conv1d = utils.Conv1D(model_params['cnn']['filters'], name='Conv1D')
-        self.conv1 = GATConv(64,activation="relu")#
-        self.conv2 = GATConv(64,activation="relu")
-        self.conv3 = GATConv(64,activation="relu")
+        #self.conv1d = utils.Conv1D(model_params['cnn']['filters'], name='Conv1D')
+        self.conv1 = GCNConv(64,activation="tanh")#
+        self.conv2 = GCNConv(64,activation="tanh")
+        self.dense1= Dense(32,activation="relu")
         self.dense = Dense(output_dim,activation="tanh")
         
 
@@ -47,12 +47,14 @@ class SwarmNet(Model):
         return inputs
 
     def _pred_next(self, time_segs, edges, training=False):
-        condensed_state = self.conv1d(time_segs)
+        #condensed_state = self.conv1d(time_segs)
         # condensed_state shape [batch, num_nodes, 1, filters]
-        condensed_state = tf.squeeze(condensed_state, axis=2)
+        #condensed_state = tf.squeeze(condensed_state, axis=2)
         # condensed_state shape [batch, num_nodes, filters]
-        X=condensed_state
-        edges=utils.load_edge_data("data",
+        X=time_segs
+        X=tf.squeeze(X,2)
+        
+        edges=utils.load_edge_data("Data_Spektral",
                                    prefix='train', size=None, padding=None) 
         edges=edges[0]
         a = tf.dtypes.cast(edges,tf.float32)
@@ -61,11 +63,12 @@ class SwarmNet(Model):
         #print(norm_by)
         X = self.conv1([X, a])
         X = self.conv2([X, a])
-        X = self.conv3([X, a])
+        X = self.dense1(X)
         # Predicted difference added to the prev state.
         # The last state in each timeseries of the stack.
         prev_state = time_segs[:, :, -1, :]
         a=self.dense(X)
+        print(a.shape)
         #print(a)
         next_state = prev_state + a
         return next_state
@@ -78,7 +81,7 @@ class SwarmNet(Model):
 
         model.compile(optimizer, loss='mse')
 
-        input_shape = [(None, model_params['time_seg_len'], num_nodes, output_dim),
+        input_shape = [(None, 1, num_nodes, output_dim),
                        (num_nodes, num_nodes)]
 
         inputs = model.build(input_shape)
