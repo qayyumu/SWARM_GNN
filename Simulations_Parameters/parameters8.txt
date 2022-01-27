@@ -1,0 +1,5 @@
+"cohesion": 0,
+"separation": 2,
+"alignment": 0.2,
+"obstacle_avoidance": 0,
+"goal_steering": 5
