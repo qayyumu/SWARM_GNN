@@ -35,8 +35,13 @@ def main():
     for i in range(ARGS.no_of_sim):
 
         # input_data: a list which is [time_segs, edge_types] if `edge_type` > 1, else [time_segs]
-        input_data, expected_time_segs = preprocess_data(
-            [data[0][i],data[1]], model_params['time_seg_len'], ARGS.pred_steps, edge_type=model_params['edge_type'], ground_truth=not ARGS.test)
+        if ARGS.no_of_sim == 1:
+
+            input_data, expected_time_segs = preprocess_data(
+                [data[i],data[1]], model_params['time_seg_len'], ARGS.pred_steps, edge_type=model_params['edge_type'], ground_truth=not ARGS.test)
+        else:
+            input_data, expected_time_segs = preprocess_data(
+                [data[0][i],data[1]], model_params['time_seg_len'], ARGS.pred_steps, edge_type=model_params['edge_type'], ground_truth=not ARGS.test)
         print(f"\n{prefix.capitalize()} data from {ARGS.data_dir}, simulation no {i} processed.\n")
 
         nagents, ndims = data[0][i].shape[-2:]
@@ -81,7 +86,7 @@ def main():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data-dir', type=str,default="Data",
+    parser.add_argument('--data-dir', type=str,default="Training 1",
                         help='data directory')
     parser.add_argument('--data-size', type=int, default=None,
                         help='optional data size cap to use for training')
@@ -110,9 +115,9 @@ if __name__ == '__main__':
                         help='turn on evaluation')
     parser.add_argument('--test', action='store_true', default=False,
                         help='turn on test')
-    parser.add_argument('--more-sim', action='store_true', default=True,
+    parser.add_argument('--more-sim', action='store_true', default=False,
                         help='if more than 1 simulation data to load ')
-    parser.add_argument('--no-of-sim', type=int, default=10,
+    parser.add_argument('--no-of-sim', type=int, default=1,
                         help='no of simulations to load')
     parser.add_argument('--suffix', type=str, default='savedata_',
                         help='suffix for save files')

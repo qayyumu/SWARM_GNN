@@ -242,8 +242,9 @@ def load_data(data_path,no_of_sim, prefix='train',suffix='',more_sim=False, size
     all_edges = _load_files(edge_file_pattern, np.int, padding, pad_dims=(1, 2))
 
     if (not more_sim):
+        newsuffix = suffix+str(0)
         # Load timeseries data.
-        timeseries_file_pattern = os.path.join(data_path, f'{prefix}_timeseries.npy')
+        timeseries_file_pattern = os.path.join(data_path, f'{prefix}_timeseries{newsuffix}.npy')
         all_data = _load_files(timeseries_file_pattern, np.float32, padding=padding, pad_dims=(2,))
 
         shuffled_idx = np.random.permutation(len(all_data))
@@ -305,8 +306,9 @@ def load_data(data_path,no_of_sim, prefix='train',suffix='',more_sim=False, size
 
 def preprocess_data(data, seg_len=1, pred_steps=1, edge_type=1, ground_truth=True):
     time_series, edges = data[:2]
+    print(time_series.shape)
     time_steps, num_nodes, ndims = time_series.shape[1:]
-
+    
     if (seg_len + pred_steps > time_steps):
         if ground_truth:
             raise ValueError('time_steps in data not long enough for seg_len and pred_steps')
