@@ -7,6 +7,7 @@ import numpy as np
 
 from GNN_swarm import *
 from GNN_sw_util import *
+from data_to_gif_file import environmentsetup
 
 
 def eval_baseline(eval_data): #  evalute baseline
@@ -32,61 +33,66 @@ def main():
     print(f"No of epochs per simulation : {ARGS.epochs}\n\n")
     data = load_data(ARGS.data_dir,ARGS.no_of_sim,prefix=prefix,suffix=ARGS.suffix,more_sim=ARGS.more_sim,
                                 size=ARGS.data_size, padding=ARGS.max_padding)
-    for i in range(ARGS.no_of_sim):
+    for j in range(ARGS.hepochs):
+        
+        for i in range(ARGS.no_of_sim):
+            print(f"EPOCH NO: {j}\n\n\n")
+            # input_data: a list which is [time_segs, edge_types] if `edge_type` > 1, else [time_segs]
+            if ARGS.no_of_sim == 1:
 
-        # input_data: a list which is [time_segs, edge_types] if `edge_type` > 1, else [time_segs]
-        if ARGS.no_of_sim == 1:
+                input_data, expected_time_segs = preprocess_data(
+                    [data[i],data[1]], model_params['time_seg_len'], ARGS.pred_steps, edge_type=model_params['edge_type'], ground_truth=not ARGS.test)
+            else:
+                input_data, expected_time_segs = preprocess_data(
+                    [data[0][i],data[1]], model_params['time_seg_len'], ARGS.pred_steps, edge_type=model_params['edge_type'], ground_truth=not ARGS.test)
+            print(f"\n{prefix.capitalize()} data from {ARGS.data_dir}, simulation no {i} processed.\n")
 
-            input_data, expected_time_segs = preprocess_data(
-                [data[i],data[1]], model_params['time_seg_len'], ARGS.pred_steps, edge_type=model_params['edge_type'], ground_truth=not ARGS.test)
-        else:
-            input_data, expected_time_segs = preprocess_data(
-                [data[0][i],data[1]], model_params['time_seg_len'], ARGS.pred_steps, edge_type=model_params['edge_type'], ground_truth=not ARGS.test)
-        print(f"\n{prefix.capitalize()} data from {ARGS.data_dir}, simulation no {i} processed.\n")
+            nagents, ndims = data[0][i].shape[-2:]
 
-        nagents, ndims = data[0][i].shape[-2:]
+            model = SwarmNet.build_model(nagents, ndims, model_params, ARGS.pred_steps)
+            model.summary()
 
-        model = SwarmNet.build_model(nagents, ndims, model_params, ARGS.pred_steps)
-        # model.summary()
+            load_model(model, ARGS.log_dir)
 
-        load_model(model, ARGS.log_dir)
+            if ARGS.train:
+                checkpoint = save_model(model, ARGS.log_dir)
 
-        if ARGS.train:
-            checkpoint = save_model(model, ARGS.log_dir)
+                # Freeze some of the layers according to train mode.
+                if ARGS.train_mode == 1:
+                    model.conv1d.trainable = True
 
-            # Freeze some of the layers according to train mode.
-            if ARGS.train_mode == 1:
-                model.conv1d.trainable = True
+                    model.graph_conv.edge_encoder.trainable = True
+                    model.graph_conv.node_decoder.trainable = False
 
-                model.graph_conv.edge_encoder.trainable = True
-                model.graph_conv.node_decoder.trainable = False
+                elif ARGS.train_mode == 2:
+                    model.conv1d.trainable = False
 
-            elif ARGS.train_mode == 2:
-                model.conv1d.trainable = False
+                    model.graph_conv.edge_encoder.trainable = False
+                    model.graph_conv.node_decoder.trainable = True
 
-                model.graph_conv.edge_encoder.trainable = False
-                model.graph_conv.node_decoder.trainable = True
+                model.fit(input_data, expected_time_segs,
+                        epochs=ARGS.epochs, batch_size=ARGS.batch_size,
+                        callbacks=[checkpoint])
 
-            model.fit(input_data, expected_time_segs,
-                    epochs=ARGS.epochs, batch_size=ARGS.batch_size,
-                    callbacks=[checkpoint])
+            elif ARGS.eval:
+                result = model.evaluate(
+                    input_data, expected_time_segs, batch_size=ARGS.batch_size)
+                # result = MSE
+                baseline = eval_baseline(data)
+                print('Baseline:', baseline, '\t| MSE / Baseline:', result / baseline)
 
-        elif ARGS.eval:
-            result = model.evaluate(
-                input_data, expected_time_segs, batch_size=ARGS.batch_size)
-            # result = MSE
-            baseline = eval_baseline(data)
-            print('Baseline:', baseline, '\t| MSE / Baseline:', result / baseline)
-
-        elif ARGS.test:
-            prediction = model.predict(input_data)
-            np.save(os.path.join(ARGS.log_dir,
-                    f'prediction_{ARGS.pred_steps}.npy'), prediction)
+            elif ARGS.test:
+                prediction = model.predict(input_data)
+                np.save(os.path.join(ARGS.log_dir,
+                        f'prediction_{ARGS.pred_steps}.npy'), prediction)
+                #no of boids = 4 here
+                environmentsetup((f'prediction_{ARGS.pred_steps}'),4,f'test_{ARGS.pred_steps}',ARGS.pred_steps)
+                print('Predictions saved in gif file')
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data-dir', type=str,default="Training 1",
+    parser.add_argument('--data-dir', type=str,default="Data",
                         help='data directory')
     parser.add_argument('--data-size', type=int, default=None,
                         help='optional data size cap to use for training')
@@ -96,13 +102,15 @@ if __name__ == '__main__':
                         help='log directory')
     parser.add_argument('--epochs', type=int, default=1,
                         help='number of training steps')
-    parser.add_argument('--pred-steps', type=int, default=1,
+    parser.add_argument('--hepochs', type=int, default=1,
+                        help='number of epochs')
+    parser.add_argument('--pred-steps', type=int, default=500,
                         help='number of steps the estimator predicts for time series')
     parser.add_argument('--batch-size', type=int, default=128,
                         help='batch size')
     parser.add_argument('--learning-rate', '--lr', type=float, default=None,
                         help='learning rate')
-    parser.add_argument('--train', action='store_true', default=True,
+    parser.add_argument('--train', action='store_true', default=False,
                         help='turn on training')
     parser.add_argument('--train-mode', type=int, default=0,
                         help='train mode determines which layers are frozen: '
@@ -113,7 +121,7 @@ if __name__ == '__main__':
                         help='max pad length to the number of agents dimension')
     parser.add_argument('--eval', action='store_true', default=False,
                         help='turn on evaluation')
-    parser.add_argument('--test', action='store_true', default=False,
+    parser.add_argument('--test', action='store_true', default=True,
                         help='turn on test')
     parser.add_argument('--more-sim', action='store_true', default=False,
                         help='if more than 1 simulation data to load ')
