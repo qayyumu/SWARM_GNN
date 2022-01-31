@@ -1,9 +1,11 @@
+from turtle import right
 from tensorflow.keras.models import Model
 import tensorflow as tf
 from tensorflow import keras
 import numpy as np
 from tensorflow.keras.layers import Dense, Dropout
 from spektral.layers import GCNConv, GATConv,GCSConv
+from spektral.utils import normalized_adjacency
 import utils_spektral as utils
 
 
@@ -15,10 +17,10 @@ class SwarmNet(Model):
         self.time_seg_len= 1
         # Layers
         #self.conv1d = utils.Conv1D(model_params['cnn']['filters'], name='Conv1D')
-        self.conv1 = GCNConv(64,activation="tanh")#
-        self.conv2 = GCNConv(64,activation="tanh")
-        self.dense1= Dense(32,activation="relu")
-        self.dense = Dense(output_dim,activation="tanh")
+        self.conv1 = GCSConv(4,activation="tanh")#
+        self.conv2 = GCSConv(4,activation="tanh")#,activation="tanh"
+        #self.dense1= Dense(32,activation="relu")
+        #self.dense = Dense(output_dim,activation="tanh")
         
 
 
@@ -52,26 +54,29 @@ class SwarmNet(Model):
         #condensed_state = tf.squeeze(condensed_state, axis=2)
         # condensed_state shape [batch, num_nodes, filters]
         X=time_segs
-        X=tf.squeeze(X,2)
+        X=tf.squeeze(X,axis=2)
         
         edges=utils.load_edge_data("Data_Spektral",
                                    prefix='train', size=None, padding=None) 
         edges=edges[0]
-        a = tf.dtypes.cast(edges,tf.float32)
-        #norm_by=np.linalg.det(edges)
-        #a=edges/norm_by
-        #print(norm_by)
+        #a = tf.dtypes.cast(edges,tf.float32)
+        a=normalized_adjacency(edges)
+        #print(a)
+
         X = self.conv1([X, a])
         X = self.conv2([X, a])
-        X = self.dense1(X)
+        #X = self.dense1(X)
         # Predicted difference added to the prev state.
         # The last state in each timeseries of the stack.
         prev_state = time_segs[:, :, -1, :]
-        a=self.dense(X)
-        print(a.shape)
+        #a=self.dense(X)
+        #print(a.shape)
         #print(a)
+        a=X
+        #a=tf.expand_dims(X,axis=)
         next_state = prev_state + a
         return next_state
+        #return X
 
     @classmethod
     def build_model(cls, num_nodes, output_dim, model_params, pred_steps=1, return_inputs=False):

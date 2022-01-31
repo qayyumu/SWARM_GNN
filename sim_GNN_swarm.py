@@ -114,7 +114,7 @@ if __name__ == '__main__':
                         help='batch size')
     parser.add_argument('--learning-rate', '--lr', type=float, default=None,
                         help='learning rate')
-    parser.add_argument('--train', action='store_true', default=True,
+    parser.add_argument('--train', action='store_true', default=False,
                         help='turn on training')
     parser.add_argument('--train-mode', type=int, default=0,
                         help='train mode determines which layers are frozen: '
@@ -125,7 +125,7 @@ if __name__ == '__main__':
                         help='max pad length to the number of agents dimension')
     parser.add_argument('--eval', action='store_true', default=False,
                         help='turn on evaluation')
-    parser.add_argument('--test', action='store_true', default=False,
+    parser.add_argument('--test', action='store_true', default=True,
                         help='turn on test')
     parser.add_argument('--more-sim', action='store_true', default=False,
                         help='if more than 1 simulation data to load ')
