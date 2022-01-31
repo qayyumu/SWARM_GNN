@@ -4,6 +4,7 @@ import argparse
 import tensorflow as tf
 from tensorflow import keras
 import numpy as np
+import time
 
 from GNN_swarm import *
 from GNN_sw_util import *
@@ -16,6 +17,63 @@ def eval_baseline(eval_data): #  evalute baseline
                              time_segs[:, 1:, :, :]))
 
 
+class CustomCallback(keras.callbacks.Callback):
+    def on_train_begin(self, logs=None):
+        keys = list(logs.keys())
+        print("Starting training; got log keys: {}".format(keys))
+
+    def on_train_end(self, logs=None):
+        keys = list(logs.keys())
+        print("Stop training; got log keys: {}".format(keys))
+
+    def on_epoch_begin(self, epoch, logs=None):
+        keys = list(logs.keys())
+        print("Start epoch {} of training; got log keys: {}".format(epoch, keys))
+
+    def on_epoch_end(self, epoch, logs=None):
+        keys = list(logs.keys())
+        print("End epoch {} of training; got log keys: {}".format(epoch, keys))
+
+    def on_test_begin(self, logs=None):
+        keys = list(logs.keys())
+        print("Start testing; got log keys: {}".format(keys))
+
+    def on_test_end(self, logs=None):
+        keys = list(logs.keys())
+        print("Stop testing; got log keys: {}".format(keys))
+
+    def on_predict_begin(self, logs=None):
+        keys = list(logs.keys())
+        print("Start predicting; got log keys: {}".format(keys))
+
+    def on_predict_end(self, logs=None):
+        keys = list(logs.keys())
+        print("Stop predicting; got log keys: {}".format(keys))
+
+    def on_train_batch_begin(self, batch, logs=None):
+        keys = list(logs.keys())
+        print("...Training: start of batch {}; got log keys: {}".format(batch, keys))
+
+    def on_train_batch_end(self, batch, logs=None):
+        keys = list(logs.keys())
+        print("...Training: end of batch {}; got log keys: {}".format(batch, keys))
+
+    def on_test_batch_begin(self, batch, logs=None):
+        keys = list(logs.keys())
+        print("...Evaluating: start of batch {}; got log keys: {}".format(batch, keys))
+
+    def on_test_batch_end(self, batch, logs=None):
+        keys = list(logs.keys())
+        print("...Evaluating: end of batch {}; got log keys: {}".format(batch, keys))
+
+    def on_predict_batch_begin(self, batch, logs=None):
+        keys = list(logs.keys())
+        print("...Predicting: start of batch {}; got log keys: {}".format(batch, keys))
+
+    def on_predict_batch_end(self, batch, logs=None):
+        keys = list(logs.keys())
+        print("...Predicting: end of batch {}; got log keys: {}".format(batch, keys))
+
 def main():
     if ARGS.train:
         prefix = 'train'   # training
@@ -24,6 +82,7 @@ def main():
     else:
         prefix = 'test'
 
+    logdir  = "logs/{}".format(time.time())
     model_params = load_model_params(ARGS.config)
     if ARGS.learning_rate is not None:
         model_params['learning_rate'] = ARGS.learning_rate
@@ -51,7 +110,7 @@ def main():
 
             nagents, ndims = data[0][i].shape[-2:]
 
-            model = SwarmNet.build_model(nagents, ndims, model_params, ARGS.pred_steps)
+            model = SwarmNet.build_model(nagents, ndims, model_params, logdir,ARGS.pred_steps)
             model.summary()
 
             load_model(model, ARGS.log_dir)
@@ -72,9 +131,11 @@ def main():
                     model.graph_conv.edge_encoder.trainable = False
                     model.graph_conv.node_decoder.trainable = True
 
+               
+                tb_callback = tf.keras.callbacks.TensorBoard(logdir, update_freq=5,)
                 model.fit(input_data, expected_time_segs,
                         epochs=ARGS.epochs, batch_size=ARGS.batch_size,
-                        callbacks=[checkpoint])
+                        callbacks=[checkpoint,tb_callback]) #,CustomCallback()])
 
             elif ARGS.eval:
                 result = model.evaluate(
@@ -146,3 +207,4 @@ if __name__ == '__main__':
     main()
 
 #python run_swarwmnet.py --data-dir path/to/training/data --log-dir path/to/log/dir --config path/to/config/file --pred-steps <prediction_horizon> --train --epochs <num_epochs>
+#tensorboard --logdir=logs

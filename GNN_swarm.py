@@ -4,6 +4,7 @@ from tensorflow import keras
 
 from GNN_sw_util import *
 
+logdir_save = './logs/'
 
 class SwarmNet(keras.Model):
     def __init__(self, num_nodes, output_dim, model_params, pred_steps=1, name='SwarmNet'):
@@ -50,6 +51,8 @@ class SwarmNet(keras.Model):
         # time_segs shape [batch, time_seg_len, num_nodes, ndims]
         # edges shape [batch, num_nodes, num_nodes, edge_types], one-hot label along last axis.
         time_segs, edges = inputs
+        file_writer = tf.summary.create_file_writer(logdir_save)
+        file_writer.set_as_default()
 
         extended_time_segs = tf.transpose(time_segs, [0, 2, 1, 3])
 
@@ -58,6 +61,15 @@ class SwarmNet(keras.Model):
                                          training=training)
             next_state = tf.expand_dims(next_state, axis=2)
             extended_time_segs = tf.concat([extended_time_segs, next_state], axis=2)
+  
+            with file_writer.as_default():
+                    # tf.summary.image("Training data", next_state, step=0)
+                    # tf.summary.text("Training data", 'Test', step=i)
+                    tf.summary.text('inputs', str(tf.reduce_mean(next_state)), step=i)
+            # print(next_state)
+            # tf.summary.scalar('edges',tf.reduce_mean(inputs[1]), step=i)
+        file_writer.flush()
+       
 
         # Transpose back to [batch, time_seg_len+pred_steps, num_agetns, ndims]
         extended_time_segs = tf.transpose(extended_time_segs, [0, 2, 1, 3])
@@ -66,7 +78,9 @@ class SwarmNet(keras.Model):
         return extended_time_segs[:, self.time_seg_len:, :, :]
 
     @classmethod
-    def build_model(cls, num_nodes, output_dim, model_params, pred_steps=1, return_inputs=False):
+    def build_model(cls, num_nodes, output_dim, model_params, logdir,pred_steps=1, return_inputs=False):
+       
+        logdir_save = logdir
         model = cls(num_nodes, output_dim, model_params, pred_steps)
 
         optimizer = keras.optimizers.Adam(learning_rate=model_params['learning_rate'])
@@ -78,6 +92,12 @@ class SwarmNet(keras.Model):
                        (None, num_nodes, num_nodes, n_edge_labels)]
 
         inputs = model.build(input_shape)
+
+        
+        # # file_writer.add_summary(tf.summary.trace_on(graph=True, profiler=True))
+        # print('Model built.')
+
+
 
         if return_inputs:
             return model, inputs
