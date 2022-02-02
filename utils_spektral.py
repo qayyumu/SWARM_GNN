@@ -35,8 +35,27 @@ class MyDataset(Dataset):
                 Graph(x=data['x'], a=data['a']))
         
         return output
+def graph_adj(edges):
+    a1 = get_edge_indices(edges,1)
+    a2 = get_edge_indices(edges,2)
+    a3 = get_edge_indices(edges,3)
+    m1=Adjacency(a1,edges.shape[1])
+    m2=Adjacency(a2,edges.shape[1])
+    m3=Adjacency(a3,edges.shape[1])
+    return [m1,m2,m3]
 
-
+def Adjacency(graph,size):
+    index = 0  #Index of the sublist
+    matrix = [[0]*size for i in range(size)]
+    for i in range(len(graph[0])):
+        matrix[graph[0][i]][graph[1][i]]=1
+    #print(matrix)
+    matrix = np.array(matrix)
+    return matrix
+    
+def get_edge_indices(edges,number):
+    """Returns edge indices of the adjacency matrix"""
+    return np.where(edges==number)
 class Conv1D(keras.layers.Layer):
     """
     Condense and abstract the time segments.
