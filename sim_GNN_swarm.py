@@ -32,7 +32,9 @@ def main():
     print(f"No of simulations to load : {ARGS.no_of_sim}\n")
     print(f"No of epochs per simulation : {ARGS.epochs}\n\n")
     data = load_data(ARGS.data_dir,ARGS.no_of_sim,prefix=prefix,suffix=ARGS.suffix,more_sim=ARGS.more_sim,
-                                size=ARGS.data_size, padding=ARGS.max_padding)
+                                 size=ARGS.data_size, padding=ARGS.max_padding)
+    # data = load_data(ARGS.data_dir,ARGS.no_of_sim,prefix="",suffix=ARGS.suffix,more_sim=ARGS.more_sim,
+    #                             size=ARGS.data_size, padding=ARGS.max_padding)
     for j in range(ARGS.hepochs):
         
         for i in range(ARGS.no_of_sim):
@@ -92,7 +94,9 @@ def main():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data-dir', type=str,default="Data",
+
+    ## default arguments is for train, current_directories, pred_size = 200
+    parser.add_argument('--data-dir', type=str,default="data/",
                         help='data directory')
     parser.add_argument('--data-size', type=int, default=None,
                         help='optional data size cap to use for training')
@@ -100,11 +104,11 @@ if __name__ == '__main__':
                         help='model config file')
     parser.add_argument('--log-dir', type=str,default='.',
                         help='log directory')
-    parser.add_argument('--epochs', type=int, default=1,
+    parser.add_argument('--epochs', type=int, default=5,
                         help='number of training steps')
     parser.add_argument('--hepochs', type=int, default=1,
                         help='number of epochs')
-    parser.add_argument('--pred-steps', type=int, default=500,
+    parser.add_argument('--pred-steps', type=int, default=1,
                         help='number of steps the estimator predicts for time series')
     parser.add_argument('--batch-size', type=int, default=128,
                         help='batch size')
@@ -140,3 +144,5 @@ if __name__ == '__main__':
     os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 
     main()
+
+#python run_swarwmnet.py --data-dir path/to/training/data --log-dir path/to/log/dir --config path/to/config/file --pred-steps <prediction_horizon> --train --epochs <num_epochs>
