@@ -54,7 +54,7 @@ def main():
                 prediction = model.predict(input_data)
                 np.save(os.path.join(ARGS.log_dir,
                         f'prediction_{ARGS.pred_steps}.npy'), prediction)
-                environmentsetup((f'prediction_{ARGS.pred_steps}'),4,f'test_{ARGS.pred_steps}_3',ARGS.pred_steps)
+                environmentsetup((f'prediction_{ARGS.pred_steps}'),4,f'test_{ARGS.pred_steps}_5',ARGS.pred_steps)
                 print('Predictions saved in gif file')
 
 
@@ -66,19 +66,19 @@ if __name__ == '__main__':
     ARGS.data_size=None
     ARGS.config='example.json'
     ARGS.log_dir='.'
-    ARGS.epochs=2000
-    ARGS.pred_steps=100
+    ARGS.epochs=1000
+    ARGS.pred_steps=500
     ARGS.batch_size=64
     ARGS.learning_rate=0.001
-    ARGS.train=True
-    ARGS.more_sim=True
-    ARGS.no_of_sim=5
+    ARGS.train=False
+    ARGS.more_sim=False
+    ARGS.no_of_sim=1
     ARGS.hepochs=1
     ARGS.suffix='savedata_'
     ARGS.train_mode=0
     ARGS.max_padding=None
     ARGS.eval=False
-    ARGS.test=False
+    ARGS.test=True
 
     ARGS.data_dir = os.path.expanduser(ARGS.data_dir)
     ARGS.config = os.path.expanduser(ARGS.config)
