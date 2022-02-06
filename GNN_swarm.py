@@ -1,4 +1,5 @@
 import numpy as np
+from sqlalchemy import true
 import tensorflow as tf
 from tensorflow import keras
 
@@ -85,7 +86,7 @@ class SwarmNet(keras.Model):
 
         optimizer = keras.optimizers.Adam(learning_rate=model_params['learning_rate'])
 
-        model.compile(optimizer, loss='mse')
+        model.compile(optimizer,run_eagerly=True, loss='mse')
 
         n_edge_labels = max(model_params['edge_type'], 1) + 1
         input_shape = [(None, model_params['time_seg_len'], num_nodes, output_dim),

@@ -85,6 +85,8 @@ class NodePropagator(keras.layers.Layer):
             node_states, 1), num_nodes, axis=1)
         # msg_from_source and msg_from_target in shape [batch, num_nodes, num_nodes, out_units]
         node_msgs = tf.concat([msg_from_source, msg_from_target], axis=-1)
+        
+        # tf.print(node_msgs)
 
         return node_msgs
 
