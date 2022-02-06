@@ -31,10 +31,10 @@ def main():
             if ARGS.no_of_sim == 1:
 
                 input_data, expected_time_segs = utils.preprocess_data(
-                    [data[i],data[1]], 1, ARGS.pred_steps, edge_type=model_params['edge_type'], ground_truth=not ARGS.test)
+                    [data[i],data[1]], 5, ARGS.pred_steps, edge_type=model_params['edge_type'], ground_truth=not ARGS.test)
             else:
                 input_data, expected_time_segs = utils.preprocess_data(
-                    [data[0][i],data[1]], 1, ARGS.pred_steps, edge_type=model_params['edge_type'], ground_truth=not ARGS.test)
+                    [data[0][i],data[1]], 5, ARGS.pred_steps, edge_type=model_params['edge_type'], ground_truth=not ARGS.test)
             print(f"\n{prefix.capitalize()} data from {ARGS.data_dir}, simulation no {i} processed.\n")
 
             nagents, ndims = data[0][0].shape[-2:]#nagents= biods+viscos+goal+obstacle,ndims=4(position[2],velocity[2])
@@ -66,11 +66,11 @@ if __name__ == '__main__':
     ARGS.data_size=None
     ARGS.config='example.json'
     ARGS.log_dir='.'
-    ARGS.epochs=1000
-    ARGS.pred_steps=500
+    ARGS.epochs=500
+    ARGS.pred_steps=100
     ARGS.batch_size=64
-    ARGS.learning_rate=0.001
-    ARGS.train=False
+    ARGS.learning_rate=None#0.001
+    ARGS.train=True
     ARGS.more_sim=False
     ARGS.no_of_sim=1
     ARGS.hepochs=1
@@ -78,7 +78,7 @@ if __name__ == '__main__':
     ARGS.train_mode=0
     ARGS.max_padding=None
     ARGS.eval=False
-    ARGS.test=True
+    ARGS.test=False
 
     ARGS.data_dir = os.path.expanduser(ARGS.data_dir)
     ARGS.config = os.path.expanduser(ARGS.config)

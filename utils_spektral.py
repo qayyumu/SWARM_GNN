@@ -254,6 +254,6 @@ def load_edge_data(data_path, prefix='train', size=None, padding=None, load_time
     
     edge_file_pattern = os.path.join(data_path, f'{prefix}_edge*.npy')
     all_edges = _load_files(edge_file_pattern, np.int, padding, pad_dims=(1, 2))
+    all_edges = all_edges[0]
 
     return all_edges
-

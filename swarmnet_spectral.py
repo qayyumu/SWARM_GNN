@@ -14,19 +14,21 @@ class SwarmNet(Model):
         super().__init__()
         #input(195,5,7,4),output(195,1,7,4)
         self.pred_steps=pred_steps
-        self.time_seg_len= 1
+        self.time_seg_len= 5
+        self.edge_type = model_params['edge_type'] 
         # Layers
-        #self.conv1d = utils.Conv1D(model_params['cnn']['filters'], name='Conv1D')
-        self.conv1 = GCSConv(4,activation="tanh")#
-        self.conv2 = GCSConv(4,activation="tanh")#,activation="tanh"
-        self.conv3 = GCSConv(4,activation="tanh")#,activation="tanh"
+        self.conv1d = utils.Conv1D(model_params['cnn']['filters'], name='Conv1D')
+        self.encoder1 = GCSConv(64,activation="tanh")#
+        self.encoder2 = GCSConv(64,activation="tanh")#,activation="tanh"
+        self.encoder3 = GCSConv(64,activation="tanh")#,activation="tanh"
         self.aggregator = keras.layers.Lambda(
             lambda x: tf.reduce_sum(x, axis=[2]))
+        self.aggregator = keras.layers.Lambda(
+            lambda x: tf.reduce_sum(x, axis=[2])) # aggregator for messages from different edge types
+ 
+        self.decoder= Dense(64,activation="relu") # decoder
+        self.outlayer = Dense(output_dim,activation="tanh") # get in the form of (posx,posy,velx,vely)
         self.activation = keras.layers.Activation('tanh')
-        self.out= Dense(4,activation="tanh")
-
-        #self.dense1= Dense(32,activation="relu")
-        #self.dense = Dense(output_dim,activation="tanh")
         
 
 
@@ -55,35 +57,57 @@ class SwarmNet(Model):
         return inputs
 
     def _pred_next(self, time_segs, edges, training=False):
-        X=time_segs
-        X=tf.squeeze(X,axis=2)
-        #print(X.shape)
+        condensed_state = self.conv1d(time_segs)
+        #condensed_state shape [batch, num_nodes, 1, filters]
+
+        condensed_state = tf.squeeze(condensed_state, axis=2)
+        # condensed_state shape [batch, num_nodes, filters]
         
+        # load edges 
         edges=utils.load_edge_data("Data",
                                    prefix='train', size=None, padding=None)
-         
-        edges=edges[0]
-        edges1,edges2,edges3=utils.graph_adj(edges)
-        #print(edges1)
-        a1=tf.convert_to_tensor(edges1,dtype=float)
-        a2=tf.convert_to_tensor(edges2,dtype=float)
-        a3=tf.convert_to_tensor(edges3,dtype=float)
-
-        #a1 = normalized_adjacency(edges1)
-        #a2 = normalized_adjacency(edges2)
-        #a3 = normalized_adjacency(edges3)
-        x1 = tf.expand_dims(self.conv1([X, a1]), 2)
-        x2 = tf.expand_dims(self.conv2([X, a2]), 2)
-        x3 = tf.expand_dims(self.conv3([X, a3]), 2)
+        # turn the hetrogeneous graph into  edge types graphs
+        all_edges_types=utils.graph_adj(edges)
         
-        x  = tf.concat((x1, x2, x3), axis=-2)# [batch,5, 3, 4]
-        X  = self.activation(self.aggregator(x)) # aggregating messages from all the graph types
+        # turn edge matrix into tensor
+        for i in range(self.edge_type):
+            all_edges_types[i]==tf.convert_to_tensor(all_edges_types[i],dtype=float)
+        
+        encoded_msgs_by_type = []
+        # find encoding messages
+        #for i in range(self.edge_type):
+        #     encoded_msgs = self.encoders[i](condensed_state,all_edges_types[i])
+        encoded_msgs = self.encoder1([condensed_state,all_edges_types[0]])    
+        encoded_msgs_by_type.append(encoded_msgs)
+        encoded_msgs = self.encoder2([condensed_state,all_edges_types[1]])    
+        encoded_msgs_by_type.append(encoded_msgs)
+        encoded_msgs = self.encoder3([condensed_state,all_edges_types[2]])    
+        encoded_msgs_by_type.append(encoded_msgs)
+        
+        encoded_msgs_by_type = tf.stack(encoded_msgs_by_type, axis=2)
+        encoded  = self.activation(self.aggregator(encoded_msgs_by_type)) # aggregating messages from all the graph types
+
+        # finding nodes with no incoming edge
+        #e= tf.reduce_sum(edges,axis=0)
+        e= np.sum(edges,axis=0)
+        b= np.where(e>0)
+        # Convert array to give weight=1 to nodes having edges
+        for i in b:
+            e[i]=1
+        e=tf.expand_dims(e, -1)
+        e=tf.cast(e, tf.float32)
+        # Multiplying embeddings with e to get no edge msg nodes to 0
+        encoded_states= tf.multiply(encoded,
+                                e)
+
+        node_states= self.decoder(tf.concat([condensed_state,encoded_states],axis=-1))
+
         # Predicted difference added to the prev state.
         # The last state in each timeseries of the stack.
-        prev_state = time_segs[:, :, -1, :]
-        a=self.out(X)
-        
-        next_state = prev_state + a
+        prev_state = time_segs[:, :, -1, :] 
+
+        next_state = prev_state + self.outlayer(node_states)
+
         return next_state
       
 
@@ -95,7 +119,7 @@ class SwarmNet(Model):
 
         model.compile(optimizer, loss='mse')
 
-        input_shape = [(None, 1, num_nodes, output_dim),
+        input_shape = [(None, 5, num_nodes, output_dim),
                        (num_nodes, num_nodes)]
 
         inputs = model.build(input_shape)
