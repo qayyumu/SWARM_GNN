@@ -257,3 +257,24 @@ def load_edge_data(data_path, prefix='train', size=None, padding=None, load_time
     all_edges = all_edges[0]
 
     return all_edges
+
+class NodePropagator(keras.layers.Layer):
+    """
+    Pass message between every pair of nodes.
+    """
+
+    def call(self, node_states):
+        # node_states shape [batch, num_nodes, out_units].
+        num_nodes = node_states.shape[1]
+
+        msg_from_source = tf.repeat(tf.expand_dims(
+            node_states, 2), num_nodes, axis=2)
+        msg_from_target = tf.repeat(tf.expand_dims(
+            node_states, 1), num_nodes, axis=1)
+        # msg_from_source and msg_from_target in shape [batch, num_nodes, num_nodes, out_units]
+        node_msgs = tf.concat([msg_from_source, msg_from_target], axis=-1)
+        
+        # tf.print(node_msgs)
+
+        return node_msgs
+
