@@ -79,6 +79,7 @@ def environmentsetup(filename,boids,save_name,prediction):
 
 
 def environmentsetup_new(filename,boids,save_name,prediction):
+    # used to plot gif of multiple predictions after model.predict
     region = (-100, 100, -100, 100)
     env = Environment2D(region)
     pos=np.load(f'{filename}.npy')

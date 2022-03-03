@@ -87,6 +87,7 @@ def main():
                 print('Baseline:', baseline, '\t| MSE / Baseline:', result / baseline)
 
             elif ARGS.test:
+                # Predicting 1 step and passing it to model again to make multiple predictions
                 print('Prediction Started')
                 prediction = model.predict(input_data)
                 #print(predicted.shape)
