@@ -67,7 +67,7 @@ if __name__ == '__main__':
     ARGS.config='example.json'
     ARGS.log_dir='.'
     ARGS.epochs=500
-    ARGS.pred_steps=100
+    ARGS.pred_steps=1
     ARGS.batch_size=64
     ARGS.learning_rate=None#0.001
     ARGS.train=True

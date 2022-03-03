@@ -22,7 +22,7 @@ class SwarmNet(Model):
         self.encoder = GCSConv(64,activation="tanh")#
         self.decoder= Dense(64,activation="relu") # decoder
         self.outlayer = Dense(output_dim,activation="tanh") # get in the form of (posx,posy,velx,vely)
-        self.activation = keras.layers.Activation('tanh')
+        #self.activation = keras.layers.Activation('tanh')
         
 
 
@@ -62,7 +62,8 @@ class SwarmNet(Model):
         edges=utils.load_edge_data("Data",
                                    prefix='train', size=None, padding=None)
            
-        edge=normalized_adjacency(edges,symmetric=False)
+        #edge=normalized_adjacency(edges,symmetric=False)
+        edge=edges/3
         edge=tf.convert_to_tensor(edge,dtype=float)
 
         e= np.sum(edges,axis=0)
@@ -78,21 +79,23 @@ class SwarmNet(Model):
                 noselfedge=np.expand_dims(ones,-1)
                 nodefeature=tf.multiply(nodefeature,noselfedge)
                 ### Apply GCN Layer
-                nodefeature=self.encoder(nodefeature,edge)# <tf.Tensor 'Squeeze:0' shape=(None, 7, 64) dtype=float32>
+                nodefeature=self.encoder([nodefeature,edge])# <tf.Tensor 'Squeeze:0' shape=(None, 7, 64) dtype=float32>
                 #<tf.Tensor 'Mul_3:0' shape=(None, 7, 128) dtype=float32>
                 # Batch,No of Nodes,64
                 gcnresult.append(nodefeature[:,j,:])
 
             else:
                 # Nodes with 0 inedge make it zero
-                nodefeature=nodes[:,j,:,:]
+                nodefeature=condensed_state
                 zeros=np.zeros(len(e))
                 e=np.expand_dims(zeros,-1)
                 nodefeature=tf.multiply(nodefeature,e)
-                gcnresult.append(nodefeature[:,j,:])
+
+                gcnresult.append(nodefeature[:,i,:])
             j=j+1
 
-
+        gcnresult=tf.convert_to_tensor(gcnresult)
+        gcnresult= tf.transpose(gcnresult,[1,0,2])
         node_states= self.decoder(tf.concat([condensed_state,gcnresult],axis=-1))
 
         # Predicted difference added to the prev state.

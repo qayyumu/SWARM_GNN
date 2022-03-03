@@ -199,14 +199,14 @@ def one_hot(labels, num_classes, dtype=np.int):
 
 
 def load_model(model, log_dir):
-    checkpoint = os.path.join(log_dir, 'weights.h5')
+    checkpoint = os.path.join(log_dir, 'weights_spektral.h5')
     if os.path.exists(checkpoint):
         model.load_weights(checkpoint)
 
 
 def save_model(model, log_dir):
     os.makedirs(log_dir, exist_ok=True)
-    checkpoint = os.path.join(log_dir, 'weights.h5')
+    checkpoint = os.path.join(log_dir, 'weights_spektral.h5')
 
     model.save_weights(checkpoint)
 

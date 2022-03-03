@@ -78,6 +78,34 @@ def environmentsetup(filename,boids,save_name,prediction):
     return env
 
 
+def environmentsetup_new(filename,boids,save_name,prediction):
+    region = (-100, 100, -100, 100)
+    env = Environment2D(region)
+    pos=np.load(f'{filename}.npy')
+    pos=np.transpose(pos,[1,0,2,3])
+    print(pos.shape)
+    pos=pos[0]
+    pos_i=pos[0]
+    goal = Goal(pos_i[0][:2], None, ndim=2)
+    env.add_goal(goal)
+    for i in range(boids):
+        position = pos_i[3+i][:2]
+        velocity = pos_i[3+i][2:]
+
+        agent = Boid(position, velocity, ndim=2, size=3, max_speed=10, max_acceleration=20)
+        agent.set_goal(goal)
+        env.add_agent(agent)
+
+    # Create a sphere obstacle 
+    sphere = Sphere(8, pos_i[1][:2], ndim=2)
+    env.add_obstacle(sphere)
+    sphere = Sphere(8, pos_i[2][:2], ndim=2)
+    env.add_obstacle(sphere)
+    animates(boids,save_name,prediction,pos[-prediction:],env,region)
+    return env
+
+
+
 def main(): 
     environmentsetup(ARGS.filename,ARGS.boids,ARGS.save_name,ARGS.steps)
 
