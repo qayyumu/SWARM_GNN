@@ -89,28 +89,50 @@ def main():
             elif ARGS.test:
                 # Predicting 1 step and passing it to model again to make multiple predictions
                 print('Prediction Started')
+                total_steps=input_data[0].shape[0]
+                red_data=data[0][0][:total_steps]# taking only the reduced number of steps
                 prediction = model.predict(input_data)
+                red_data=np.append(red_data,prediction[-1],axis=0)# appending the made prediction to prev data
+                print(red_data.shape)
+                print(prediction[-1])
                 #print(predicted.shape)
                 for i in range(ARGS.pred_steps-1):
-                    input_data=for_more_predictions(data[0],input_data[1],prediction,500+i)
+                    #environmentsetup((f'prediction_{ARGS.pred_steps}'),4,f'test_{ARGS.pred_steps}',ARGS.pred_steps)
+                    input_data=for_more_predictions(red_data,input_data[1],prediction)
+                    print(input_data[0].shape)
                     prediction = model.predict(input_data)
+                    red_data=np.append(red_data,prediction[-1],axis=0)# appending the made prediction to prev data
+                    print(f"Data Shape Changed to: {red_data.shape}")
+                    print(prediction[-1])
                     print(f'prediction No:{i+2} completed')
-                print('After Prediction shape :')
-                print(prediction[0].shape)
+                print('After Prediction data shape :')
+                print(red_data.shape)
+                red_data=np.expand_dims(red_data,axis=0)
                 np.save(os.path.join(ARGS.log_dir,
-                       f'prediction_{ARGS.pred_steps}.npy'), prediction)
+                       f'prediction_{ARGS.pred_steps}.npy'), red_data)
                  #no of boids = 4 here
-                environmentsetup_new((f'prediction_{ARGS.pred_steps}'),4,f'test_{ARGS.pred_steps}',ARGS.pred_steps)
+                environmentsetup((f'prediction_{ARGS.pred_steps}'),4,f'test_{ARGS.pred_steps}',ARGS.pred_steps)
                 print('Predictions saved in gif file')
 
-def for_more_predictions(data,input_data,prediction,total):
-    top = data[0][:total]
-    predicted=np.append(top,prediction[-1],axis=0)
+def for_more_predictions(data,edges,prediction):
+    """
+    changing data to the req input format
+    """
+    predicted = data
+    #predicted=np.append(top,prediction[-1],axis=0)
     predicted = np.expand_dims(predicted,axis=0)
     time_segs_stack = stack_time_series(predicted[:, :, :, :],5)
     time_steps, num_nodes, ndims = predicted.shape[1:]
     time_segs = time_segs_stack.reshape([-1, 5, num_nodes, ndims])
-    edges=np.append(input_data,np.expand_dims(input_data[0],axis=0),axis=0)
+    #edges=np.append(edges,np.expand_dims(edges[0],axis=0),axis=0)
+    # making edge matrix size = time segs size
+    if time_segs.shape[0]<=edges.shape[0]:
+        edges=edges[:(time_segs.shape[0])]
+    else:
+        i=time_segs.shape[0]-edges.shape[0]
+        for _ in range(i):
+            edges=np.append(edges,np.expand_dims(edges[0],axis=0),axis=0)
+
 
     return [time_segs,edges]
 
@@ -132,9 +154,9 @@ if __name__ == '__main__':
                         help='number of training steps')
     parser.add_argument('--hepochs', type=int, default=1,
                         help='number of epochs')
-    parser.add_argument('--pred-steps_rem', type=int, default=500,
-                        help='number of steps the estimator predicts for time series')
-    parser.add_argument('--pred-steps', type=int, default=10,
+    parser.add_argument('--pred-steps_rem', type=int, default=990,
+                        help='number of steps to remove from time series')
+    parser.add_argument('--pred-steps', type=int, default=100,
                         help='number of steps the estimator predicts for time series')
     parser.add_argument('--batch-size', type=int, default=128,
                         help='batch size')
